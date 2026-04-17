@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>qrcoder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Manrope:wght@800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script defer src="./vendor/qrcode.js"></script>
+    <script defer src="./vendor/jspdf.js"></script>
+    <script defer src="./script.js"></script>
+  </head>
+  <body>
+    <button
+      type="button"
+      class="theme-switch"
+      id="theme-toggle"
+      aria-pressed="false"
+      aria-label="switch to dark mode"
+    >
+      <span class="theme-switch-track" aria-hidden="true">
+        <span class="theme-switch-thumb" id="theme-thumb">
+          <span class="theme-icon theme-icon-sun" id="theme-icon-sun">
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path
+                d="M12 3.75a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V4.5a.75.75 0 0 1 .75-.75Zm0 12a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Zm8.25-4.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1 0-1.5h1.5ZM6 12a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 6 12Zm11.303-5.303a.75.75 0 0 1 1.06 1.06l-1.06 1.061a.75.75 0 0 1-1.06-1.06l1.06-1.061Zm-9.546 9.546a.75.75 0 0 1 1.06 1.06l-1.06 1.061a.75.75 0 1 1-1.06-1.06l1.06-1.061Zm10.606 2.121a.75.75 0 0 1-1.06 0l-1.06-1.06a.75.75 0 1 1 1.06-1.061l1.06 1.06a.75.75 0 0 1 0 1.061Zm-9.546-9.546a.75.75 0 0 1-1.06 0L6.697 7.757a.75.75 0 0 1 1.06-1.06l1.061 1.06a.75.75 0 0 1 0 1.061ZM12 18a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 12 18Z"
+                fill="currentColor"
+              />
+            </svg>
+          </span>
+          <span class="theme-icon theme-icon-moon" id="theme-icon-moon">
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path
+                d="M14.44 3.957a.75.75 0 0 1 .867.95 6.75 6.75 0 1 0 8.786 8.786.75.75 0 0 1 .95.867A9 9 0 1 1 14.44 3.957Z"
+                fill="currentColor"
+              />
+            </svg>
+          </span>
+        </span>
+      </span>
+      <span class="theme-switch-label" id="theme-label">switch to dark mode</span>
+    </button>
+    <main class="app-shell">
+      <section class="panel" aria-labelledby="app-title">
+        <div class="panel-header">
+          <div class="panel-copy">
+            <h1 id="app-title">QR Code Generator</h1>
+            <p>Paste any URL, pick your colors, and generate a QR code instantly.</p>
+          </div>
+        </div>
+
+        <form class="generator-form" id="qr-form">
+          <label class="field-group" for="url-input">
+            <span>Link URL</span>
+            <input
+              id="url-input"
+              name="url"
+              type="url"
+              inputmode="url"
+              placeholder="https://example.com"
+              autocomplete="off"
+              required
+            />
+          </label>
+
+          <div class="color-grid">
+            <label class="field-group color-field" for="foreground-color">
+              <span>QR Color</span>
+              <div class="color-input-wrap">
+                <input id="foreground-color" name="foreground" type="color" value="#111827" />
+                <output for="foreground-color" id="foreground-value">#111827</output>
+              </div>
+            </label>
+
+            <label class="field-group color-field" for="background-color">
+              <span>Background</span>
+              <div class="color-input-wrap">
+                <input id="background-color" name="background" type="color" value="#f8fafc" />
+                <output for="background-color" id="background-value">#f8fafc</output>
+              </div>
+            </label>
+          </div>
+
+          <button type="submit">Generate QR Code</button>
+          <div class="download-actions" aria-label="Download QR code">
+            <button type="button" class="download-button" data-download="png">Download PNG</button>
+            <button type="button" class="download-button" data-download="jpg">Download JPG</button>
+            <button type="button" class="download-button" data-download="pdf">Download PDF</button>
+          </div>
+          <p class="status-message" id="status-message" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="preview-card" aria-labelledby="preview-title">
+        <div class="preview-copy">
+          <h2 id="preview-title">Preview</h2>
+          <p>Your QR code updates here.</p>
+        </div>
+        <div class="preview-frame">
+          <canvas id="qr-canvas" width="280" height="280"></canvas>
+        </div>
+      </section>
+    </main>
+    <p class="copyright">2026©jadyndesignlab</p>
+  </body>
+</html>

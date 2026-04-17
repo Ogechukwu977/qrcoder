@@ -1,0 +1,8 @@
+node_modules/
+dist/
+build/
+.next/
+.vite/
+coverage/
+.env
+.DS_Store
