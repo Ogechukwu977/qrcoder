@@ -118,6 +118,10 @@ body[data-theme="dark"] .theme-icon-moon {
   min-height: 100vh;
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(280px, 360px);
+  grid-template-areas:
+    "switch switch"
+    "panel preview"
+    "bulk bulk";
   gap: 1.5rem;
   align-items: stretch;
   padding: 2rem 0 1rem;
@@ -133,19 +137,35 @@ main.app-shell {
 }
 
 #theme-toggle {
-  grid-column: 1 / -1;
+  grid-area: switch;
   justify-self: center;
   align-self: center;
   margin-bottom: 0.5rem;
 }
 
 .panel,
-.preview-card {
+.preview-card,
+.bulk-panel {
   height: 100%;
   border: 1px solid var(--border);
   border-radius: 28px;
   background: var(--surface);
   box-shadow: var(--shadow);
+}
+
+.panel {
+  grid-area: panel;
+}
+
+.preview-card {
+  grid-area: preview;
+}
+
+.bulk-panel {
+  grid-area: bulk;
+  padding: 1.5rem;
+  display: grid;
+  gap: 1.25rem;
 }
 
 .panel {
@@ -197,6 +217,51 @@ main.app-shell {
   flex: 1;
 }
 
+.type-switch {
+  margin: 0;
+  padding: 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-strong);
+  display: inline-flex;
+  gap: 0.35rem;
+}
+
+.type-switch legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.type-option {
+  position: relative;
+  cursor: pointer;
+}
+
+.type-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.type-option span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 88px;
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  color: var(--text-secondary);
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.type-option input:checked + span {
+  background: var(--button-bg);
+  color: var(--button-text);
+}
+
 .field-group {
   display: grid;
   gap: 0.65rem;
@@ -207,7 +272,9 @@ main.app-shell {
   font-weight: 500;
 }
 
-input[type="url"] {
+input[type="url"],
+input[type="text"],
+textarea {
   width: 100%;
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -219,10 +286,17 @@ input[type="url"] {
 }
 
 input[type="url"]:focus,
+input[type="text"]:focus,
+textarea:focus,
 input[type="color"]:focus {
   outline: none;
   border-color: rgba(217, 119, 6, 0.75);
   box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.12);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 180px;
 }
 
 .color-grid {
@@ -324,6 +398,103 @@ button:hover {
   gap: 0.4rem;
 }
 
+.bulk-copy {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.bulk-copy h2 {
+  margin: 0;
+  font-family: "Manrope", "Inter", sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.bulk-copy p,
+.bulk-status,
+.bulk-item-value {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.bulk-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.bulk-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.bulk-generate {
+  padding-inline: 1.5rem;
+}
+
+.bulk-results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.bulk-download-all {
+  display: none;
+}
+
+.bulk-download-all.is-visible {
+  display: inline-flex;
+}
+
+.bulk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.bulk-item {
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--surface-strong);
+  padding: 1rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.bulk-item canvas {
+  width: 100%;
+  max-width: 180px;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.bulk-item-meta {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.bulk-item-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.bulk-item-value {
+  font-size: 0.84rem;
+  overflow-wrap: anywhere;
+}
+
+.bulk-item .download-button {
+  width: 100%;
+}
+
 .preview-frame {
   width: 100%;
   min-height: 340px;
@@ -362,11 +533,17 @@ button:hover {
 @media (max-width: 820px) {
   .app-shell {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "switch"
+      "panel"
+      "preview"
+      "bulk";
     padding: 1.25rem 0;
   }
 
   .panel,
-  .preview-card {
+  .preview-card,
+  .bulk-panel {
     padding: 1.25rem;
   }
 
@@ -388,6 +565,16 @@ button:hover {
 
   .download-actions {
     grid-template-columns: 1fr;
+  }
+
+  .bulk-toolbar,
+  .bulk-results-header {
+    align-items: stretch;
+  }
+
+  .type-switch {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .preview-frame {

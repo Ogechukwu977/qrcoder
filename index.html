@@ -50,17 +50,29 @@
         <div class="panel-header">
           <div class="panel-copy">
             <h1 id="app-title">QR Code Generator</h1>
-            <p>Paste any URL, pick your colors, and generate a QR code instantly.</p>
+            <p>Create QR codes for a URL or phone number, then export one or many at once.</p>
           </div>
         </div>
 
         <form class="generator-form" id="qr-form">
-          <label class="field-group" for="url-input">
-            <span>Link URL</span>
+          <fieldset class="type-switch">
+            <legend>Single QR Type</legend>
+            <label class="type-option">
+              <input type="radio" name="single-type" value="url" checked />
+              <span>URL</span>
+            </label>
+            <label class="type-option">
+              <input type="radio" name="single-type" value="phone" />
+              <span>Phone</span>
+            </label>
+          </fieldset>
+
+          <label class="field-group" for="primary-input">
+            <span id="primary-label">Link URL</span>
             <input
-              id="url-input"
-              name="url"
-              type="url"
+              id="primary-input"
+              name="primary"
+              type="text"
               inputmode="url"
               placeholder="https://example.com"
               autocomplete="off"
@@ -99,11 +111,55 @@
       <section class="preview-card" aria-labelledby="preview-title">
         <div class="preview-copy">
           <h2 id="preview-title">Preview</h2>
-          <p>Your QR code updates here.</p>
+          <p>Your single QR code updates here.</p>
         </div>
         <div class="preview-frame">
           <canvas id="qr-canvas" width="280" height="280"></canvas>
         </div>
+      </section>
+
+      <section class="bulk-panel" aria-labelledby="bulk-title">
+        <div class="bulk-copy">
+          <h2 id="bulk-title">Bulk Unique QR Codes</h2>
+          <p>Choose a type, paste one item per line, and generate all unique QR codes at once.</p>
+        </div>
+
+        <form class="bulk-form" id="bulk-form">
+          <div class="bulk-toolbar">
+            <fieldset class="type-switch">
+              <legend>Bulk QR Type</legend>
+              <label class="type-option">
+                <input type="radio" name="bulk-type" value="url" checked />
+                <span>URL</span>
+              </label>
+              <label class="type-option">
+                <input type="radio" name="bulk-type" value="phone" />
+                <span>Phone</span>
+              </label>
+            </fieldset>
+
+            <button type="submit" class="bulk-generate">Generate Bulk QR Codes</button>
+          </div>
+
+          <label class="field-group" for="bulk-input">
+            <span id="bulk-label">Enter one URL per line</span>
+            <textarea
+              id="bulk-input"
+              name="bulk"
+              rows="7"
+              placeholder="https://example.com&#10;https://example.org&#10;https://example.net"
+            ></textarea>
+          </label>
+        </form>
+
+        <div class="bulk-results-header">
+          <p class="bulk-status" id="bulk-status" aria-live="polite"></p>
+          <button type="button" class="download-button bulk-download-all" id="bulk-download-all">
+            Download All PNGs
+          </button>
+        </div>
+
+        <div class="bulk-grid" id="bulk-grid"></div>
       </section>
     </main>
     <p class="copyright">2026©jadyndesignlab</p>
