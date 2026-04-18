@@ -388,7 +388,7 @@ async function handleBulkSubmit(event) {
   try {
     const type = selectedType("bulk-type");
     const uniqueItems = uniqueNormalizedItems(bulkInput.value, type);
-    const rawCount = bulkInput
+    const rawCount = bulkInput.value
       .split("\n")
       .map((item) => item.trim())
       .filter(Boolean).length;
