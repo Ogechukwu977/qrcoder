@@ -1,5 +1,4 @@
-const HISTORY_KEY = "qr-code-history-v1";
-const ANALYTICS_NAMESPACE = "jadyndesignlab-qr";
+const HISTORY_KEY = "qr-code-history-v2";
 const MAX_HISTORY_ITEMS = 50;
 
 const form = document.querySelector("#qr-form");
@@ -9,12 +8,8 @@ const foregroundInput = document.querySelector("#foreground-color");
 const backgroundInput = document.querySelector("#background-color");
 const foregroundValue = document.querySelector("#foreground-value");
 const backgroundValue = document.querySelector("#background-value");
-const logoUpload = document.querySelector("#logo-upload");
 const statusMessage = document.querySelector("#status-message");
-const trackingNote = document.querySelector("#tracking-note");
 const canvas = document.querySelector("#qr-canvas");
-const singleScanCount = document.querySelector("#single-scan-count");
-const singleTrackUrl = document.querySelector("#single-track-url");
 const downloadButtons = document.querySelectorAll("[data-download]");
 const themeToggle = document.querySelector("#theme-toggle");
 const themeLabel = document.querySelector("#theme-label");
@@ -28,8 +23,6 @@ const bulkGrid = document.querySelector("#bulk-grid");
 const bulkDownloadAllButton = document.querySelector("#bulk-download-all");
 const historyList = document.querySelector("#history-list");
 
-const analyticsEnabled = ["http:", "https:"].includes(window.location.protocol);
-let currentLogoDataUrl = "";
 let currentSingleData = null;
 let bulkItems = [];
 let historyItems = loadHistory();
@@ -43,6 +36,11 @@ function setStatus(message, type = "success") {
   statusMessage.className = `status-message ${type}`;
 }
 
+function updateColorOutputs() {
+  foregroundValue.textContent = foregroundInput.value;
+  backgroundValue.textContent = backgroundInput.value;
+}
+
 function applyTheme(theme) {
   document.body.dataset.theme = theme;
   const nextActionLabel = theme === "dark" ? "switch to light mode" : "switch to dark mode";
@@ -53,11 +51,6 @@ function applyTheme(theme) {
 
 function toggleTheme() {
   applyTheme(document.body.dataset.theme === "dark" ? "light" : "dark");
-}
-
-function updateColorOutputs() {
-  foregroundValue.textContent = foregroundInput.value;
-  backgroundValue.textContent = backgroundInput.value;
 }
 
 function updateInputCopy() {
@@ -124,127 +117,18 @@ function normalizeValue(value, type) {
   return type === "phone" ? normalizePhone(value) : normalizeUrl(value);
 }
 
-function analyticsApiUrl(action, key) {
-  return `https://api.countapi.xyz/${action}/${encodeURIComponent(ANALYTICS_NAMESPACE)}/${encodeURIComponent(key)}`;
-}
-
-async function fetchScanCount(counterKey) {
-  if (!analyticsEnabled || !counterKey) {
-    return 0;
-  }
-
-  try {
-    const response = await fetch(analyticsApiUrl("get", counterKey));
-    const payload = await response.json();
-    return typeof payload.value === "number" ? payload.value : 0;
-  } catch {
-    return 0;
-  }
-}
-
-function createCounterKey() {
-  const randomPart =
-    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-      ? crypto.randomUUID().replace(/[^a-zA-Z0-9-]/g, "").slice(0, 12)
-      : `${Date.now()}${Math.random().toString(36).slice(2, 10)}`;
-
-  return `qr-${Date.now()}-${randomPart}`.slice(0, 63);
-}
-
-function buildTrackableUrl(counterKey, target) {
-  if (!analyticsEnabled) {
-    return target;
-  }
-
-  const redirectUrl = new URL("./redirect.html", window.location.href);
-  redirectUrl.searchParams.set("key", counterKey);
-  redirectUrl.searchParams.set("target", target);
-  return redirectUrl.toString();
-}
-
-function updateSingleAnalyticsDisplay(item) {
-  if (!item) {
-    singleScanCount.textContent = analyticsEnabled ? "Scans: 0" : "Scans unavailable in local file mode";
-    singleTrackUrl.textContent = "";
-    return;
-  }
-
-  if (analyticsEnabled) {
-    singleScanCount.textContent = `Scans: ${item.scanCount ?? 0}`;
-    singleTrackUrl.textContent = item.trackUrl;
-  } else {
-    singleScanCount.textContent = "Scans unavailable in local file mode";
-    singleTrackUrl.textContent = "Host this app on a public http(s) URL to enable scan analytics.";
-  }
-}
-
-function readFileAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error("Logo upload failed."));
-    reader.readAsDataURL(file);
-  });
-}
-
-function loadImage(source) {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error("Logo image could not be loaded."));
-    image.src = source;
-  });
-}
-
-async function drawLogoOverlay(targetCanvas, logoDataUrl) {
-  if (!logoDataUrl) {
-    return;
-  }
-
-  const context = targetCanvas.getContext("2d");
-  const image = await loadImage(logoDataUrl);
-  const size = targetCanvas.width;
-  const backdropSize = size * 0.24;
-  const logoSize = size * 0.16;
-  const offset = (size - backdropSize) / 2;
-  const logoOffset = (size - logoSize) / 2;
-  const radius = backdropSize * 0.22;
-
-  context.fillStyle = "#ffffff";
-  context.beginPath();
-  context.moveTo(offset + radius, offset);
-  context.lineTo(offset + backdropSize - radius, offset);
-  context.quadraticCurveTo(offset + backdropSize, offset, offset + backdropSize, offset + radius);
-  context.lineTo(offset + backdropSize, offset + backdropSize - radius);
-  context.quadraticCurveTo(
-    offset + backdropSize,
-    offset + backdropSize,
-    offset + backdropSize - radius,
-    offset + backdropSize
-  );
-  context.lineTo(offset + radius, offset + backdropSize);
-  context.quadraticCurveTo(offset, offset + backdropSize, offset, offset + backdropSize - radius);
-  context.lineTo(offset, offset + radius);
-  context.quadraticCurveTo(offset, offset, offset + radius, offset);
-  context.closePath();
-  context.fill();
-
-  context.drawImage(image, logoOffset, logoOffset, logoSize, logoSize);
-}
-
 async function drawQrCode(
   targetCanvas,
   text,
   {
     transparentBackground = false,
     width = 280,
-    logoDataUrl = "",
     foregroundColor = foregroundInput.value,
     backgroundColor = backgroundInput.value
   } = {}
 ) {
   if (typeof QRCode === "undefined") {
-    throw new Error("QR library failed to load. Check your internet connection and refresh.");
+    throw new Error("QR library failed to load. Refresh the page and try again.");
   }
 
   await QRCode.toCanvas(targetCanvas, text, {
@@ -255,17 +139,12 @@ async function drawQrCode(
       light: transparentBackground ? "#0000" : backgroundColor
     }
   });
-
-  if (logoDataUrl) {
-    await drawLogoOverlay(targetCanvas, logoDataUrl);
-  }
 }
 
 async function createExportCanvas(
   text,
   {
     transparentBackground = false,
-    logoDataUrl = "",
     foregroundColor = foregroundInput.value,
     backgroundColor = backgroundInput.value
   } = {}
@@ -277,7 +156,6 @@ async function createExportCanvas(
   await drawQrCode(exportCanvas, text, {
     transparentBackground,
     width: exportCanvas.width,
-    logoDataUrl,
     foregroundColor,
     backgroundColor
   });
@@ -285,34 +163,8 @@ async function createExportCanvas(
   return exportCanvas;
 }
 
-function buildSvgWithLogo(svgMarkup, logoDataUrl) {
-  if (!logoDataUrl) {
-    return svgMarkup;
-  }
-
-  const viewBoxMatch = svgMarkup.match(/viewBox="0 0 ([0-9.]+) ([0-9.]+)"/i);
-
-  if (!viewBoxMatch) {
-    return svgMarkup;
-  }
-
-  const size = Number(viewBoxMatch[1]);
-  const backdropSize = size * 0.24;
-  const logoSize = size * 0.16;
-  const offset = (size - backdropSize) / 2;
-  const logoOffset = (size - logoSize) / 2;
-  const radius = backdropSize * 0.22;
-  const overlay = `
-    <rect x="${offset}" y="${offset}" width="${backdropSize}" height="${backdropSize}" rx="${radius}" ry="${radius}" fill="#ffffff" />
-    <image href="${logoDataUrl}" x="${logoOffset}" y="${logoOffset}" width="${logoSize}" height="${logoSize}" preserveAspectRatio="xMidYMid meet" />
-  `;
-
-  return svgMarkup.replace("</svg>", `${overlay}</svg>`);
-}
-
 async function createSvgBlob(
   text,
-  logoDataUrl = "",
   {
     foregroundColor = foregroundInput.value,
     backgroundColor = backgroundInput.value
@@ -327,18 +179,15 @@ async function createSvgBlob(
     }
   });
 
-  const finalMarkup = buildSvgWithLogo(svgMarkup, logoDataUrl);
-  return new Blob([finalMarkup], { type: "image/svg+xml;charset=utf-8" });
+  return new Blob([svgMarkup], { type: "image/svg+xml;charset=utf-8" });
 }
 
 function downloadBlob(blob, fileName) {
   const link = document.createElement("a");
   const objectUrl = URL.createObjectURL(blob);
-
   link.href = objectUrl;
   link.download = fileName;
   link.click();
-
   window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 }
 
@@ -373,29 +222,17 @@ function storeHistoryItem(item) {
   saveHistory();
 }
 
-async function syncHistoryCounts() {
-  if (!analyticsEnabled || historyItems.length === 0) {
-    renderHistory();
-    return;
-  }
-
-  historyItems = await Promise.all(
-    historyItems.map(async (item) => ({
-      ...item,
-      scanCount: await fetchScanCount(item.counterKey)
-    }))
-  );
-
-  saveHistory();
-  renderHistory();
-
-  if (currentSingleData) {
-    const match = historyItems.find((item) => item.id === currentSingleData.id);
-    if (match) {
-      currentSingleData.scanCount = match.scanCount;
-      updateSingleAnalyticsDisplay(currentSingleData);
-    }
-  }
+function buildQrItem({ original, normalized, type }) {
+  return {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+    original,
+    normalized,
+    qrText: normalized,
+    type,
+    foregroundColor: foregroundInput.value,
+    backgroundColor: backgroundInput.value,
+    createdAt: new Date().toISOString()
+  };
 }
 
 async function renderHistory() {
@@ -421,7 +258,6 @@ async function renderHistory() {
     thumb.height = 168;
     await drawQrCode(thumb, item.qrText, {
       width: 168,
-      logoDataUrl: item.logoDataUrl || "",
       foregroundColor: item.foregroundColor,
       backgroundColor: item.backgroundColor
     });
@@ -439,9 +275,7 @@ async function renderHistory() {
 
     const meta = document.createElement("p");
     meta.className = "history-meta";
-    meta.textContent = analyticsEnabled
-      ? `Scans: ${item.scanCount ?? 0} • ${new Date(item.createdAt).toLocaleString()}`
-      : `${new Date(item.createdAt).toLocaleString()} • Analytics needs http(s) hosting`;
+    meta.textContent = new Date(item.createdAt).toLocaleString();
 
     content.append(title, value, meta);
 
@@ -455,11 +289,14 @@ async function renderHistory() {
     pngButton.addEventListener("click", async () => {
       const exportCanvas = await createExportCanvas(item.qrText, {
         transparentBackground: true,
-        logoDataUrl: item.logoDataUrl || "",
         foregroundColor: item.foregroundColor,
         backgroundColor: item.backgroundColor
       });
-      exportCanvas.toBlob((blob) => blob && downloadBlob(blob, `${fileBaseName(item.normalized)}.png`), "image/png");
+      exportCanvas.toBlob((blob) => {
+        if (blob) {
+          downloadBlob(blob, `${fileBaseName(item.normalized)}.png`);
+        }
+      }, "image/png");
     });
 
     const svgButton = document.createElement("button");
@@ -467,7 +304,7 @@ async function renderHistory() {
     svgButton.className = "download-button";
     svgButton.textContent = "SVG";
     svgButton.addEventListener("click", async () => {
-      const svgBlob = await createSvgBlob(item.qrText, item.logoDataUrl || "", {
+      const svgBlob = await createSvgBlob(item.qrText, {
         foregroundColor: item.foregroundColor,
         backgroundColor: item.backgroundColor
       });
@@ -482,47 +319,24 @@ async function renderHistory() {
   historyList.append(fragment);
 }
 
-function buildQrItem({ original, normalized, type, logoDataUrl = "" }) {
-  const counterKey = createCounterKey();
-  const qrText = buildTrackableUrl(counterKey, normalized);
-
-  return {
-    id: `${counterKey}-${Date.now()}`,
-    original,
-    normalized,
-    type,
-    counterKey,
-    qrText,
-    trackUrl: qrText,
-    scanCount: 0,
-    createdAt: new Date().toISOString(),
-    logoDataUrl,
-    foregroundColor: foregroundInput.value,
-    backgroundColor: backgroundInput.value
-  };
-}
-
 async function renderSingleQrCode(rawValue) {
   const type = selectedType("single-type");
   const normalized = normalizeValue(rawValue, type);
   const item = buildQrItem({
     original: rawValue.trim(),
     normalized,
-    type,
-    logoDataUrl: currentLogoDataUrl
+    type
   });
 
   await drawQrCode(canvas, item.qrText, {
     width: 280,
-    logoDataUrl: currentLogoDataUrl,
     foregroundColor: item.foregroundColor,
     backgroundColor: item.backgroundColor
   });
 
   currentSingleData = item;
-  updateSingleAnalyticsDisplay(item);
   storeHistoryItem(item);
-  renderHistory();
+  await renderHistory();
   setStatus("QR code ready.");
 }
 
@@ -550,8 +364,7 @@ function uniqueNormalizedItems(rawText, type) {
     buildQrItem({
       original,
       normalized,
-      type,
-      logoDataUrl: currentLogoDataUrl
+      type
     })
   );
 }
@@ -575,7 +388,6 @@ async function renderBulkCodes() {
     bulkCanvas.height = 220;
     await drawQrCode(bulkCanvas, item.qrText, {
       width: 220,
-      logoDataUrl: item.logoDataUrl || "",
       foregroundColor: item.foregroundColor,
       backgroundColor: item.backgroundColor
     });
@@ -589,7 +401,7 @@ async function renderBulkCodes() {
 
     const value = document.createElement("p");
     value.className = "bulk-item-value";
-    value.textContent = analyticsEnabled ? `${item.original} • Scans: ${item.scanCount}` : item.original;
+    value.textContent = item.original;
 
     const actions = document.createElement("div");
     actions.className = "bulk-item-actions";
@@ -601,11 +413,14 @@ async function renderBulkCodes() {
     pngButton.addEventListener("click", async () => {
       const exportCanvas = await createExportCanvas(item.qrText, {
         transparentBackground: true,
-        logoDataUrl: item.logoDataUrl || "",
         foregroundColor: item.foregroundColor,
         backgroundColor: item.backgroundColor
       });
-      exportCanvas.toBlob((blob) => blob && downloadBlob(blob, `${fileBaseName(item.normalized)}.png`), "image/png");
+      exportCanvas.toBlob((blob) => {
+        if (blob) {
+          downloadBlob(blob, `${fileBaseName(item.normalized)}.png`);
+        }
+      }, "image/png");
     });
 
     const svgButton = document.createElement("button");
@@ -613,7 +428,7 @@ async function renderBulkCodes() {
     svgButton.className = "download-button";
     svgButton.textContent = "SVG";
     svgButton.addEventListener("click", async () => {
-      const svgBlob = await createSvgBlob(item.qrText, item.logoDataUrl || "", {
+      const svgBlob = await createSvgBlob(item.qrText, {
         foregroundColor: item.foregroundColor,
         backgroundColor: item.backgroundColor
       });
@@ -630,33 +445,22 @@ async function renderBulkCodes() {
   bulkDownloadAllButton.classList.add("is-visible");
 }
 
-async function rerenderSingleIfPossible() {
-  if (!currentSingleData) {
-    return;
-  }
-
-  await drawQrCode(canvas, currentSingleData.qrText, {
-    width: 280,
-    logoDataUrl: currentSingleData.logoDataUrl || "",
-    foregroundColor: currentSingleData.foregroundColor,
-    backgroundColor: currentSingleData.backgroundColor
-  });
-}
-
 async function rerenderAllIfPossible() {
   updateColorOutputs();
 
   if (currentSingleData) {
-    currentSingleData.logoDataUrl = currentLogoDataUrl;
     currentSingleData.foregroundColor = foregroundInput.value;
     currentSingleData.backgroundColor = backgroundInput.value;
-    await rerenderSingleIfPossible();
+    await drawQrCode(canvas, currentSingleData.qrText, {
+      width: 280,
+      foregroundColor: currentSingleData.foregroundColor,
+      backgroundColor: currentSingleData.backgroundColor
+    });
   }
 
   if (bulkItems.length > 0) {
     bulkItems = bulkItems.map((item) => ({
       ...item,
-      logoDataUrl: currentLogoDataUrl,
       foregroundColor: foregroundInput.value,
       backgroundColor: backgroundInput.value
     }));
@@ -664,7 +468,7 @@ async function rerenderAllIfPossible() {
   }
 
   if (historyItems.length > 0) {
-    renderHistory();
+    await renderHistory();
   }
 }
 
@@ -676,7 +480,6 @@ async function handleSubmit(event) {
   } catch (error) {
     currentSingleData = null;
     canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-    updateSingleAnalyticsDisplay(null);
     setStatus(error.message, "error");
   }
 }
@@ -695,7 +498,7 @@ async function handleBulkSubmit(event) {
     bulkItems = items;
     bulkItems.forEach(storeHistoryItem);
     await renderBulkCodes();
-    renderHistory();
+    await renderHistory();
 
     const duplicateCount = rawCount - items.length;
     bulkStatus.textContent =
@@ -714,12 +517,15 @@ async function handleBulkDownloadAll() {
   for (const item of bulkItems) {
     const exportCanvas = await createExportCanvas(item.qrText, {
       transparentBackground: true,
-      logoDataUrl: item.logoDataUrl || "",
       foregroundColor: item.foregroundColor,
       backgroundColor: item.backgroundColor
     });
 
-    exportCanvas.toBlob((blob) => blob && downloadBlob(blob, `${fileBaseName(item.normalized)}.png`), "image/png");
+    exportCanvas.toBlob((blob) => {
+      if (blob) {
+        downloadBlob(blob, `${fileBaseName(item.normalized)}.png`);
+      }
+    }, "image/png");
   }
 }
 
@@ -729,7 +535,7 @@ async function downloadSingle(format) {
   }
 
   if (format === "svg") {
-    const svgBlob = await createSvgBlob(currentSingleData.qrText, currentSingleData.logoDataUrl || "", {
+    const svgBlob = await createSvgBlob(currentSingleData.qrText, {
       foregroundColor: currentSingleData.foregroundColor,
       backgroundColor: currentSingleData.backgroundColor
     });
@@ -741,7 +547,6 @@ async function downloadSingle(format) {
   const transparentBackground = format === "png";
   const exportCanvas = await createExportCanvas(currentSingleData.qrText, {
     transparentBackground,
-    logoDataUrl: currentSingleData.logoDataUrl || "",
     foregroundColor: currentSingleData.foregroundColor,
     backgroundColor: currentSingleData.backgroundColor
   });
@@ -766,7 +571,7 @@ async function downloadSingle(format) {
   }
 
   const mimeType = format === "jpg" ? "image/jpeg" : "image/png";
-  const fileExtension = format === "jpg" ? "jpg" : "png";
+  const extension = format === "jpg" ? "jpg" : "png";
   const quality = format === "jpg" ? 0.95 : undefined;
 
   exportCanvas.toBlob(
@@ -776,7 +581,7 @@ async function downloadSingle(format) {
         return;
       }
 
-      downloadBlob(blob, `${fileBaseName(currentSingleData.normalized)}.${fileExtension}`);
+      downloadBlob(blob, `${fileBaseName(currentSingleData.normalized)}.${extension}`);
       setStatus(`${format.toUpperCase()} downloaded.`);
     },
     mimeType,
@@ -792,40 +597,12 @@ async function handleDownload(event) {
   }
 }
 
-async function handleLogoUpload(event) {
-  const [file] = event.target.files || [];
-
-  if (!file) {
-    currentLogoDataUrl = "";
-
-    if (currentSingleData) {
-      currentSingleData.logoDataUrl = "";
-    }
-
-    await rerenderAllIfPossible();
-    return;
-  }
-
-  try {
-    currentLogoDataUrl = await readFileAsDataUrl(file);
-
-    if (currentSingleData) {
-      currentSingleData.logoDataUrl = currentLogoDataUrl;
-    }
-
-    await rerenderAllIfPossible();
-  } catch (error) {
-    setStatus(error.message, "error");
-  }
-}
-
 singleTypeInputs.forEach((input) =>
   input.addEventListener("change", () => {
     updateInputCopy();
     primaryInput.value = "";
     currentSingleData = null;
     canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-    updateSingleAnalyticsDisplay(null);
     setStatus(`Enter a ${selectedType("single-type") === "phone" ? "phone number" : "URL"} to generate a QR code.`);
   })
 );
@@ -845,7 +622,6 @@ form.addEventListener("submit", handleSubmit);
 bulkForm.addEventListener("submit", handleBulkSubmit);
 foregroundInput.addEventListener("input", () => rerenderAllIfPossible().catch((error) => setStatus(error.message, "error")));
 backgroundInput.addEventListener("input", () => rerenderAllIfPossible().catch((error) => setStatus(error.message, "error")));
-logoUpload.addEventListener("change", (event) => handleLogoUpload(event));
 downloadButtons.forEach((button) => button.addEventListener("click", handleDownload));
 bulkDownloadAllButton.addEventListener("click", () =>
   handleBulkDownloadAll().catch((error) => {
@@ -854,14 +630,8 @@ bulkDownloadAllButton.addEventListener("click", () =>
 );
 themeToggle.addEventListener("click", toggleTheme);
 
-trackingNote.textContent = analyticsEnabled
-  ? "Scan analytics are active. Every generated QR code uses a trackable redirect URL."
-  : "Scan analytics need this app to be hosted on a public http(s) URL. Local file mode can still generate QR codes.";
-
 updateColorOutputs();
 updateInputCopy();
 applyTheme("light");
-updateSingleAnalyticsDisplay(null);
 setStatus("Enter a URL to generate a QR code.");
 renderHistory();
-syncHistoryCounts();

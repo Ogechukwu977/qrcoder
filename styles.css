@@ -283,7 +283,6 @@ main.app-shell {
 
 input[type="url"],
 input[type="text"],
-input[type="file"],
 textarea {
   width: 100%;
   border: 1px solid var(--border);
@@ -297,7 +296,6 @@ textarea {
 
 input[type="url"]:focus,
 input[type="text"]:focus,
-input[type="file"]:focus,
 textarea:focus,
 input[type="color"]:focus {
   outline: none;
@@ -409,23 +407,10 @@ button:hover {
   gap: 0.4rem;
 }
 
-.preview-meta {
-  width: 100%;
-  display: grid;
-  gap: 0.35rem;
-}
-
 .helper-copy {
   margin: 0;
   color: var(--text-secondary);
   font-size: 0.85rem;
-}
-
-.scan-count {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: 0.95rem;
-  font-weight: 600;
 }
 
 .bulk-copy {
@@ -542,16 +527,17 @@ button:hover {
   background: var(--surface-strong);
   padding: 1rem;
   display: grid;
-  grid-template-columns: 84px minmax(0, 1fr) auto;
+  grid-template-columns: 168px minmax(0, 1fr) 130px;
   gap: 1rem;
-  align-items: center;
+  align-items: start;
 }
 
 .history-thumb {
-  width: 84px;
-  height: 84px;
+  width: 168px;
+  height: 168px;
   border-radius: 16px;
   background: #ffffff;
+  display: block;
 }
 
 .history-content {
@@ -579,7 +565,7 @@ button:hover {
 .history-actions {
   display: grid;
   gap: 0.5rem;
-  min-width: 130px;
+  width: 130px;
 }
 
 .preview-frame {
