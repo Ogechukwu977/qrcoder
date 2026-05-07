@@ -121,7 +121,8 @@ body[data-theme="dark"] .theme-icon-moon {
   grid-template-areas:
     "switch switch"
     "panel preview"
-    "bulk bulk";
+    "bulk bulk"
+    "history history";
   gap: 1.5rem;
   align-items: stretch;
   padding: 2rem 0 1rem;
@@ -145,7 +146,8 @@ main.app-shell {
 
 .panel,
 .preview-card,
-.bulk-panel {
+.bulk-panel,
+.history-panel {
   height: 100%;
   border: 1px solid var(--border);
   border-radius: 28px;
@@ -163,6 +165,13 @@ main.app-shell {
 
 .bulk-panel {
   grid-area: bulk;
+  padding: 1.5rem;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.history-panel {
+  grid-area: history;
   padding: 1.5rem;
   display: grid;
   gap: 1.25rem;
@@ -274,6 +283,7 @@ main.app-shell {
 
 input[type="url"],
 input[type="text"],
+input[type="file"],
 textarea {
   width: 100%;
   border: 1px solid var(--border);
@@ -287,6 +297,7 @@ textarea {
 
 input[type="url"]:focus,
 input[type="text"]:focus,
+input[type="file"]:focus,
 textarea:focus,
 input[type="color"]:focus {
   outline: none;
@@ -353,7 +364,7 @@ button:hover {
 
 .download-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.75rem;
 }
 
@@ -396,6 +407,25 @@ button:hover {
   width: 100%;
   display: grid;
   gap: 0.4rem;
+}
+
+.preview-meta {
+  width: 100%;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.helper-copy {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.scan-count {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-weight: 600;
 }
 
 .bulk-copy {
@@ -495,6 +525,63 @@ button:hover {
   width: 100%;
 }
 
+.bulk-item-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.history-list {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.history-item {
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--surface-strong);
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+}
+
+.history-thumb {
+  width: 84px;
+  height: 84px;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.history-content {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.history-title,
+.history-value,
+.history-meta {
+  margin: 0;
+}
+
+.history-title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.history-value,
+.history-meta {
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.history-actions {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 130px;
+}
+
 .preview-frame {
   width: 100%;
   min-height: 340px;
@@ -537,13 +624,15 @@ button:hover {
       "switch"
       "panel"
       "preview"
-      "bulk";
+      "bulk"
+      "history";
     padding: 1.25rem 0;
   }
 
   .panel,
   .preview-card,
-  .bulk-panel {
+  .bulk-panel,
+  .history-panel {
     padding: 1.25rem;
   }
 
@@ -564,12 +653,22 @@ button:hover {
   }
 
   .download-actions {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .bulk-toolbar,
   .bulk-results-header {
     align-items: stretch;
+  }
+
+  .history-item {
+    grid-template-columns: 1fr;
+  }
+
+  .history-actions,
+  .bulk-item-actions {
+    min-width: 0;
+    grid-template-columns: 1fr;
   }
 
   .type-switch {

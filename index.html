@@ -98,23 +98,37 @@
             </label>
           </div>
 
+          <label class="field-group" for="logo-upload">
+            <span>Custom Logo</span>
+            <input id="logo-upload" name="logo" type="file" accept="image/*" />
+            <p class="helper-copy">Upload a logo to place it in the center of the QR code.</p>
+          </label>
+
           <button type="submit">Generate QR Code</button>
           <div class="download-actions" aria-label="Download QR code">
             <button type="button" class="download-button" data-download="png">Download PNG</button>
             <button type="button" class="download-button" data-download="jpg">Download JPG</button>
             <button type="button" class="download-button" data-download="pdf">Download PDF</button>
+            <button type="button" class="download-button" data-download="svg">Download SVG</button>
           </div>
           <p class="status-message" id="status-message" aria-live="polite"></p>
+          <p class="helper-copy tracking-note" id="tracking-note">
+            Scan analytics work when this app is hosted on a public `http(s)` URL.
+          </p>
         </form>
       </section>
 
       <section class="preview-card" aria-labelledby="preview-title">
         <div class="preview-copy">
           <h2 id="preview-title">Preview</h2>
-          <p>Your single QR code updates here.</p>
+          <p>Your single QR code updates here, with live scan tracking when enabled.</p>
         </div>
         <div class="preview-frame">
           <canvas id="qr-canvas" width="280" height="280"></canvas>
+        </div>
+        <div class="preview-meta">
+          <p class="scan-count" id="single-scan-count">Scans: 0</p>
+          <p class="helper-copy" id="single-track-url"></p>
         </div>
       </section>
 
@@ -160,6 +174,14 @@
         </div>
 
         <div class="bulk-grid" id="bulk-grid"></div>
+      </section>
+
+      <section class="history-panel" aria-labelledby="history-title">
+        <div class="bulk-copy">
+          <h2 id="history-title">QR History</h2>
+          <p>Previously generated QR codes are saved here with scan counts and quick downloads.</p>
+        </div>
+        <div class="history-list" id="history-list"></div>
       </section>
     </main>
     <p class="copyright">2026©jadyndesignlab</p>
